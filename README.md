@@ -72,7 +72,6 @@ To use this MCP server with Claude Desktop, add the following to your Claude con
         "NANGO_SECRET_KEY": "enter your nango secret key",
         "NANGO_CONNECTION_ID": "enter your nango connection id",
         "NANGO_INTEGRATION_ID": "enter your nango integration id",
-        "ZOHO_REGION": ""
       }
     }
 }
