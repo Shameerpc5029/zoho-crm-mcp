@@ -65,10 +65,9 @@ def get_connection_credentials() -> dict[str, Any]:
 class ZohoCRMClient:
     """Zoho CRM API client"""
     
-    def __init__(self, region: str = 'in'):
-        self.region = region
-        self.api_url = f"https://www.zohoapis.{region}/crm/v2"
-        
+    def __init__(self):
+        self.region = None
+        self.api_url = None
         self.access_token = None
         self._load_credentials()
     
@@ -80,6 +79,26 @@ class ZohoCRMClient:
             if 'credentials' in credentials:
                 creds = credentials['credentials']
                 self.access_token = creds.get('access_token')
+                
+                # Extract region from connection_config extension
+                if 'connection_config' in credentials and 'extension' in credentials['connection_config']:
+                    self.region = credentials['connection_config']['extension']
+                else:
+                    # Fallback: try to extract from api_domain in raw credentials
+                    if 'raw' in creds and 'api_domain' in creds['raw']:
+                        api_domain = creds['raw']['api_domain']
+                        # Extract region from URL like 'https://www.zohoapis.in'
+                        if '.zohoapis.' in api_domain:
+                            self.region = api_domain.split('.zohoapis.')[1].rstrip('/')
+                        else:
+                            self.region = 'in'  # Default fallback
+                    else:
+                        self.region = 'in'  # Default fallback
+                
+                # Set API URL based on extracted region
+                self.api_url = f"https://www.zohoapis.{self.region}/crm/v2"
+                
+                logger.info(f"Zoho CRM client initialized for region: {self.region}")
             else:
                 raise ZohoCRMError("Invalid credentials format from Nango")
                 
@@ -166,9 +185,7 @@ class ZohoCRMClient:
 
 # Initialize the CRM client
 try:
-    crm_client = ZohoCRMClient(
-        region=os.environ.get("ZOHO_REGION", "in"),
-    )
+    crm_client = ZohoCRMClient()
 except Exception as e:
     logger.error(f"Failed to initialize Zoho CRM client: {e}")
     crm_client = None
